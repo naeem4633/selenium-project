@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import subprocess
+from screenColorCheck import detect_screen_color, black_screen_detected, white_screen_detected
 
 os.environ['PATH'] += r"C:/Seleniumrivers"
 
@@ -76,6 +77,14 @@ def click_toolbar_button(driver):
 #     process.wait()
 
 def run_recording_script(driver):
+    # Delete previous screenshots if they exist
+    if os.path.exists("screenshot.png"):
+        os.remove("screenshot.png")
+    if os.path.exists("screenshot2.png"):
+        os.remove("screenshot2.png")
+
+    driver.switch_to.window(driver.window_handles[-1])
+    
     try:
         # Wait for canvas element to appear in the current tab or switch to the new tab9
         WebDriverWait(driver, 15).until(
@@ -85,15 +94,21 @@ def run_recording_script(driver):
         print("Preview not found, waiting 15 seconds then starting the recording...")
         #wait some more time
         time.sleep(15)
-
-        if not EC.presence_of_element_located((By.CLASS_NAME, "header--titleWithCaret--iNOEc")):
-            driver.switch_to.window(driver.window_handles[-1])
+        driver.save_screenshot("screenshot.png")
+        if black_screen_detected("screenshot.png"):
+            print("black screen detected")
             driver.refresh()
             time.sleep(20)
-            if not EC.presence_of_element_located((By.CLASS_NAME, "header--titleWithCaret--iNOEc")):
-                print("Black screen, exiting the process")
-                sys.exit(1)
+            print("black screen possibly resolved, resuming recording")
+        elif white_screen_detected("screenshot.png"):
+            print("white screen detected, waiting 20 seconds")
+            time.sleep(20)
+            driver.save_screenshot("screenshot2.png")
+            if black_screen_detected("screenshot2.png"):
+                driver.refresh()
+                time.sleep(20)
 
+    time.sleep(10)
     # Run recordingScript.py
     process = subprocess.Popen(["python", "recordingScript.py"])
     # Wait for the process to finish
