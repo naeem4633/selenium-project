@@ -1,5 +1,7 @@
 import os
 import sys
+import shutil
+import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,6 +18,7 @@ WEBSITE_URLS = [
     "https://www.figma.com/file/nxOzlZOMd8scMs2zTnC7Al/Guruz-Fitness-Studio?type=design&t=LhsuJq8dWJlr8n9b-6",
     "https://www.figma.com/file/2GwPX0GDscubAait4VnfWQ/Gluckstadt-Fitness?type=design&t=LhsuJq8dWJlr8n9b-699"
 ]
+OBS_VIDEOS_FOLDER = r"C:\Users\ahmed\OneDrive\Desktop\OBSVids"
 
 IMPLICIT_WAIT_TIME = 10  # Set implicit wait time to 10 seconds
 
@@ -39,43 +42,6 @@ def click_toolbar_button(driver):
         print("Error: Toolbar button not found. Exiting...")
         sys.exit(1)
 
-# def run_recording_script(driver):
-#     # try:
-#     #     # Wait for canvas element to appear in the current tab or switch to the new tab
-#     #     WebDriverWait(driver, 15).until(
-#     #         EC.presence_of_element_located((By.CLASS_NAME, "prototype--viewer--uYMkg"))
-#     #     )
-#     # except:
-#     #     try:
-#     #         print("Preview not found, retrying...")
-#     #         # Switch to the new tab
-#     #         driver.switch_to.window(driver.window_handles[-1])
-#     #         # Refresh the new tab
-#     #         driver.refresh()
-#     #         # Wait for canvas element to appear in the new tab
-#     #         WebDriverWait(driver, 20).until(
-#     #             EC.presence_of_element_located((By.CLASS_NAME, "prototype--viewer--uYMkg"))
-#     #         )
-#     #     except:
-#     #         # If canvas element still doesn't appear after second attempt, display error and exit
-#     #         print("Error: Canvas element did not appear after two attempts. Recording script cannot be run. Exiting...")
-#     #         sys.exit(1)
-
-#     try:
-#         # Wait for canvas element to appear in the current tab or switch to the new tab9
-#         WebDriverWait(driver, 15).until(
-#             EC.presence_of_element_located((By.CLASS_NAME, "prototype--viewer--uYMkg"))
-#         )
-#     except:
-#         print("Preview not found, waiting 15 seconds then starting the recording...")
-#         #wait some more time
-#         time.sleep(15)
-
-#     # Run recordingScript.py
-#     process = subprocess.Popen(["python", "recordingScript.py"])
-#     # Wait for the process to finish
-#     process.wait()
-
 def run_recording_script(driver):
     # Delete previous screenshots if they exist
     if os.path.exists("screenshot.png"):
@@ -86,7 +52,7 @@ def run_recording_script(driver):
     driver.switch_to.window(driver.window_handles[-1])
     
     try:
-        # Wait for canvas element to appear in the current tab or switch to the new tab9
+        # Wait for canvas element to appear in the current tab or switch to the new tab
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CLASS_NAME, "prototype--viewer--uYMkg"))
         )
@@ -119,12 +85,37 @@ def close_window(driver):
     # Close the entire browser window
     driver.quit()
 
+def rename_recent_file(url):
+    try:
+        # List all files in the OBS videos folder
+        files = os.listdir(OBS_VIDEOS_FOLDER)
+        
+        # Filter out directories and get the most recent file
+        files = [f for f in files if os.path.isfile(os.path.join(OBS_VIDEOS_FOLDER, f))]
+        files.sort(key=lambda x: os.path.getmtime(os.path.join(OBS_VIDEOS_FOLDER, x)), reverse=True)
+        
+        if files:
+            most_recent_file = files[0]
+            
+            # Extract relevant words from the URL
+            words = re.search(r'\/([^\/]+)\?', url).group(1)
+            new_filename = os.path.join(OBS_VIDEOS_FOLDER, f"{words}.mp4")
+            
+            shutil.move(os.path.join(OBS_VIDEOS_FOLDER, most_recent_file), new_filename)
+            print(f"Renamed {most_recent_file} to {new_filename}")
+        else:
+            print("No files found in OBS videos folder.")
+    except FileNotFoundError:
+        print("OBS videos folder not found.")
+
+
 def main():
     for url in WEBSITE_URLS:
         driver = open_firefox(url)
         click_toolbar_button(driver)
         run_recording_script(driver)
         close_window(driver)
+        rename_recent_file(url)
 
 if __name__ == "__main__":
     main()
