@@ -18,30 +18,10 @@ def main():
     listener = keyboard.Listener(on_press=on_press)
     listener.start()
 
-    # Press the ] key to start recording
-    # pyautogui.keyDown(']')
-    # time.sleep(0.1)
-    # pyautogui.keyUp(']')
-
-    #skip the intial screen
-    time.sleep(2)
-    pyautogui.keyDown('right')
     time.sleep(5)
 
     # scroll laptop, num9 is scroll down, num8 is scroll up hotkey
     scroll_laptop_view('num9', 'num8')
-
-    # pyautogui.keyDown('right')
-
-    # time.sleep(1)
-
-    # scroll phone, num9 is scroll down, num8 is scroll up hotkey
-    # scroll_phone_view('num9', 'num8')
-
-    # Press the [ key to stop recording
-    # pyautogui.keyDown('[')
-    # time.sleep(0.1)
-    # pyautogui.keyUp('[')
 
     if stop_execution:
         print("Execution stopped.")

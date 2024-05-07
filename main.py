@@ -8,17 +8,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import subprocess
-from screenColorCheck import detect_screen_color, black_screen_detected, white_screen_detected
+from screenColorCheck import detect_screen_color, black_screen_detected, white_screen_detected, black_screen_detected_small_area
+import pyautogui
 
-os.environ['PATH'] += r"C:/Seleniumrivers"
+os.environ['PATH'] += r"C:/SeleniumDrivers"
 
 # Constants[]
 WEBSITE_URLS = [
-    "https://www.figma.com/file/2Gu4rDpUogRxb1SG8yUzcI/STRONG-INC.?type=design&mode=design&t=AuaebCPYdd4yHuLu-0",
-    "https://www.figma.com/file/nxOzlZOMd8scMs2zTnC7Al/Guruz-Fitness-Studio?type=design&t=LhsuJq8dWJlr8n9b-6",
-    "https://www.figma.com/file/2GwPX0GDscubAait4VnfWQ/Gluckstadt-Fitness?type=design&t=LhsuJq8dWJlr8n9b-699"
+"https://www.figma.com/file/p8fFwlKKzz40HiAvCJFsa9/Valhalla-Training-Grounds?type=design&node-id=34-976&mode=design&t=f7RRP1Jb7rk0YGhO-0"
 ]
+
 OBS_VIDEOS_FOLDER = r"C:\Users\ahmed\OneDrive\Desktop\OBSVids"
+AUTOSCROLL_EXE_PATH = "./AutoScroll.exe"
 
 IMPLICIT_WAIT_TIME = 10  # Set implicit wait time to 10 seconds
 
@@ -48,6 +49,8 @@ def run_recording_script(driver):
         os.remove("screenshot.png")
     if os.path.exists("screenshot2.png"):
         os.remove("screenshot2.png")
+    if os.path.exists("screenshot3.png"):
+        os.remove("screenshot3.png")
 
     driver.switch_to.window(driver.window_handles[-1])
     
@@ -74,7 +77,18 @@ def run_recording_script(driver):
                 driver.refresh()
                 time.sleep(20)
 
-    time.sleep(10)
+    time.sleep(5)
+    
+    # Go to the laptop preview section and start the recording
+    screen_width, screen_height = pyautogui.size()
+    pyautogui.moveTo(screen_width / 2, screen_height / 2)
+    time.sleep(2)
+    pyautogui.press('right')
+    driver.save_screenshot("screenshot3.png")
+    if black_screen_detected_small_area("screenshot3.png"):
+        print('black screen detected')
+        pyautogui.press('left')
+
     # Run recordingScript.py
     process = subprocess.Popen(["python", "recordingScript.py"])
     # Wait for the process to finish
@@ -110,6 +124,7 @@ def rename_recent_file(url):
 
 
 def main():
+    subprocess.Popen([AUTOSCROLL_EXE_PATH])
     for url in WEBSITE_URLS:
         driver = open_firefox(url)
         click_toolbar_button(driver)
